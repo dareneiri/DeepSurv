@@ -482,7 +482,7 @@ class DeepSurv:
 
         # weights_out = lasagne.layers.get_all_param_values(self.network, trainable=False)
         # Optionally, you could now dump the network weights to a file like this:
-        numpy.savez('model.npz', *lasagne.layers.get_all_param_values(self.network, trainable=False))
+        numpy.savez('model.npz', *lasagne.layers.get_all_param_values(self.network))
         if self.updates:
             updates_out = [p.get_value() for p in self.updates.keys()]
         else:
