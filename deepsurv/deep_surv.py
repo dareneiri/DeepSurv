@@ -480,7 +480,9 @@ class DeepSurv:
             for (idx, param) in enumerate(lst):
                 group.create_dataset(str(idx), data=param)
 
-        weights_out = lasagne.layers.get_all_param_values(self.network, trainable=False)
+        # weights_out = lasagne.layers.get_all_param_values(self.network, trainable=False)
+        # Optionally, you could now dump the network weights to a file like this:
+        numpy.savez('model.npz', *lasagne.layers.get_all_param_values(self.network, trainable=False))
         if self.updates:
             updates_out = [p.get_value() for p in self.updates.keys()]
         else:
@@ -491,8 +493,8 @@ class DeepSurv:
         # so that when we read it later, we can construct the list of
         # parameters in the same order they were saved
         with h5py.File(filename, 'w') as f_out:
-            weights_grp = f_out.create_group('weights')
-            save_list_by_idx(weights_grp, weights_out)
+            # weights_grp = f_out.create_group('weights')
+            # save_list_by_idx(weights_grp, weights_out)
 
             updates_grp = f_out.create_group('updates')
             save_list_by_idx(updates_grp, updates_out)
@@ -511,14 +513,19 @@ class DeepSurv:
 
         # Load all of the parameters
         with h5py.File(filename, 'r') as f_in:
-            weights_in = load_all_keys(f_in['weights'])
+            # weights_in = load_all_keys(f_in['weights'])
             updates_in = load_all_keys(f_in['updates'])
 
         # Sort them according to the idx to ensure they are set correctly
-        sorted_weights_in = sort_params_by_idx(weights_in)
-        lasagne.layers.set_all_param_values(self.network, sorted_weights_in, 
-            trainable=False)
+        # sorted_weights_in = sort_params_by_idx(weights_in)
+        # lasagne.layers.set_all_param_values(self.network, sorted_weights_in, 
+        #    trainable=False)
 
+        # And load them again later on like this:
+        with numpy.load('model.npz') as f:
+            param_values = [f['arr_%d' % i] for i in range(len(f.files))]
+        lasagne.layers.set_all_param_values(self.network, param_values)
+        
         sorted_updates_in = sort_params_by_idx(updates_in)
         self.restored_update_params = sorted_updates_in
 
