@@ -21,10 +21,9 @@ setup(name='deepsurv',
     ],
     packages=['deepsurv'],
     install_requires=[
-        'theano==0.9.0',
+        'theano>=0.9.0',
         'lasagne==0.2.dev1',
-        'lifelines==0.9.2',
-        'matplotlib==2.0.2',
+        'lifelines>=0.9.2',
     ],
     # test_suite = 'nose.collector',
     # test_require = ['nose','lasagne','theano']
