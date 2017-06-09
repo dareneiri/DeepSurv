@@ -471,64 +471,15 @@ class DeepSurv:
     def save_model(self, filename, weights_file = None):
         with open(filename, 'w') as fp:
             fp.write(self.to_json())
-
+            
         if weights_file:
-            self.save_weights(weights_file)
+            numpy.savez(weights_file, *lasagne.layers.get_all_param_values(self.network))
 
-    def save_weights(self,filename):
-        def save_list_by_idx(group, lst):
-            for (idx, param) in enumerate(lst):
-                group.create_dataset(str(idx), data=param)
-
-        # weights_out = lasagne.layers.get_all_param_values(self.network, trainable=False)
-        # Optionally, you could now dump the network weights to a file like this:
-        numpy.savez('model.npz', *lasagne.layers.get_all_param_values(self.network))
-        if self.updates:
-            updates_out = [p.get_value() for p in self.updates.keys()]
-        else:
-            raise Exception("Model has not been trained: no params to save!")
-
-        # Store all of the parameters in an hd5f file
-        # We store the parameter under the index in the list
-        # so that when we read it later, we can construct the list of
-        # parameters in the same order they were saved
-        with h5py.File(filename, 'w') as f_out:
-            # weights_grp = f_out.create_group('weights')
-            # save_list_by_idx(weights_grp, weights_out)
-
-            updates_grp = f_out.create_group('updates')
-            save_list_by_idx(updates_grp, updates_out)
-
-    def load_weights(self, filename):
-        def load_all_keys(fp):
-            results = []
-            for key in fp:
-                dataset = fp[key][:]
-                results.append((int(key), dataset))
-            return results
-
-        def sort_params_by_idx(params):
-            return [param for (idx, param) in sorted(params, 
-            key=lambda param: param[0])]
-
-        # Load all of the parameters
-        with h5py.File(filename, 'r') as f_in:
-            # weights_in = load_all_keys(f_in['weights'])
-            updates_in = load_all_keys(f_in['updates'])
-
-        # Sort them according to the idx to ensure they are set correctly
-        # sorted_weights_in = sort_params_by_idx(weights_in)
-        # lasagne.layers.set_all_param_values(self.network, sorted_weights_in, 
-        #    trainable=False)
-
-        # And load them again later on like this:
-        with numpy.load('model.npz') as f:
+    def load_weights(self, weights_filename):
+        with numpy.load(weights_filename) as f:
             param_values = [f['arr_%d' % i] for i in range(len(f.files))]
         lasagne.layers.set_all_param_values(self.network, param_values)
-        
-        sorted_updates_in = sort_params_by_idx(updates_in)
-        self.restored_update_params = sorted_updates_in
-
+       
     def risk(self,deterministic = False):
         """
         Returns a theano expression for the output of network which is an
